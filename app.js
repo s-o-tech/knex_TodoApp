@@ -18,7 +18,7 @@ let createError = require('http-errors'),
     passport = require('passport'),
     session = require('express-session'),
     LocalStrategy = require('passport-local').Strategy,
-    knex = require('./dbConnect');
+    knex = require('./dbConnect'),
     app = express();
 
 

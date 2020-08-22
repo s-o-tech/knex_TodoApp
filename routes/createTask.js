@@ -1,17 +1,18 @@
 let express = require('express'),
     router = express.Router(),
-    connection = require('../dbConnect');
+    knex = require('../dbConnect');
 
 router.get('/',function(req,res,next){
     if(req.isAuthenticated() && req.user.isAdmin){
-        connection.query('select id,username from users;',function(err,result,fields){
-            if(err){
-                res.render('createTask',{title:'Error'});
-            }
-            else{
-                let users = Object.values(JSON.parse(JSON.stringify(result)));
-                res.render('createTask',{'title':"Create Task",'users':users,isAuth:req.isAuthenticated()});
-            }
+
+        knex('users').select('id','username')
+        .then(function(rows){
+            let users = Object.values(JSON.parse(JSON.stringify(rows)));
+            res.render('createTask',{title:"Create Task",users:users,isAuth:req.isAuthenticated()});
+        })
+        .catch(function(err){
+            console.error(err);
+            res.render('createTask',{title:'Error',users:[],isAuth:req.isAuthenticated()});
         });
     }
     else{
@@ -25,13 +26,16 @@ router.post('/', function(req,res,next){
         let title = req.body.title,
             message = req.body.message,
             targetID = req.body.target;
-        connection.query(`insert into tasks values (0,'${title}','${message}',0,${targetID});`,function(err,result,fields){
-            if(err){
-                res.render('createTask',{title:`Error`,isAuth:req.isAuthenticated()});
-            }
-            else{
-                res.redirect('ok');
-            }
+        knex('tasks').insert({
+            id:0,
+            title:title,
+            message:message,
+            target:targetID
+        }).then(function(results){
+            res.redirect('ok');
+        }).catch(function(err){
+            console.error(err);
+            res.render('createTask',{title:`Error`,isAuth:req.isAuthenticated()});
         });
     }
     else{
